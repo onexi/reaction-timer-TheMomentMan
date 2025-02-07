@@ -2,12 +2,14 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
 
 const app = express();
 const port = 5000;
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "public"))); // Serve static files
 
 // Initialize SQLite database
 const db = new sqlite3.Database("reaction_times.db", (err) => {
@@ -17,6 +19,11 @@ const db = new sqlite3.Database("reaction_times.db", (err) => {
     console.log("Connected to the SQLite database.");
     db.run("CREATE TABLE IF NOT EXISTS times (id INTEGER PRIMARY KEY, reactionTime INTEGER)");
   }
+});
+
+// Serve the HTML page
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "ReactionTimerApp.html"));
 });
 
 // Endpoint to record reaction time
@@ -42,10 +49,10 @@ app.get("/fastest", (req, res) => {
       console.error("Error fetching data:", err);
       return res.status(500).json({ error: "Failed to retrieve fastest reaction time." });
     }
-    res.json({ fastestTime: row.fastestTime });
+    res.json({ fastestTime: row.fastestTime || "No data yet" });
   });
 });
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 });

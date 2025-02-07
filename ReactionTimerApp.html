@@ -1,60 +1,79 @@
-import { useState, useEffect } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Timer</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #reaction-button {
+            width: 200px;
+            height: 200px;
+            font-size: 20px;
+            color: white;
+            background-color: red;
+            border: none;
+            cursor: pointer;
+        }
+        #start-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reaction Timer</h1>
+    <p>Wait for the button to turn green, then click as fast as you can!</p>
+    <button id="reaction-button" disabled>Wait for Green</button>
+    <br>
+    <button id="start-button">Start Test</button>
+    <p id="reaction-time"></p>
+    
+    <script>
+        let startTime, timeoutId;
+        
+        document.getElementById("start-button").addEventListener("click", () => {
+            const button = document.getElementById("reaction-button");
+            button.disabled = true;
+            button.style.backgroundColor = "red";
+            button.textContent = "Wait for Green";
+            document.getElementById("reaction-time").textContent = "";
+            
+            const delay = Math.floor(Math.random() * 19000) + 1000; // Random delay between 1-20s
+            
+            timeoutId = setTimeout(() => {
+                startTime = Date.now();
+                button.style.backgroundColor = "green";
+                button.textContent = "CLICK!";
+                button.disabled = false;
+            }, delay);
+        });
 
-export default function ReactionTimer() {
-  const [status, setStatus] = useState("waiting");
-  const [startTime, setStartTime] = useState(null);
-  const [reactionTime, setReactionTime] = useState(null);
-  const [timeoutId, setTimeoutId] = useState(null);
+        document.getElementById("reaction-button").addEventListener("click", () => {
+            const button = document.getElementById("reaction-button");
+            if (button.style.backgroundColor === "red") {
+                clearTimeout(timeoutId);
+                button.textContent = "Too Soon!";
+            } else {
+                const reactionTime = Date.now() - startTime;
+                document.getElementById("reaction-time").textContent = `Your Reaction Time: ${reactionTime} ms`;
+                sendReactionTime(reactionTime);
+            }
+            button.disabled = true;
+        });
 
-  const startTest = () => {
-    setStatus("waiting");
-    setReactionTime(null);
-
-    const delay = Math.floor(Math.random() * 19000) + 1000; // 1-20s delay
-    const id = setTimeout(() => {
-      setStatus("ready");
-      setStartTime(Date.now());
-    }, delay);
-
-    setTimeoutId(id);
-  };
-
-  const handleClick = () => {
-    if (status === "waiting") {
-      clearTimeout(timeoutId);
-      setStatus("too soon");
-    } else if (status === "ready") {
-      const endTime = Date.now();
-      const timeTaken = endTime - startTime;
-      setReactionTime(timeTaken);
-      sendReactionTimeToServer(timeTaken);
-      setStatus("waiting");
-    }
-  };
-
-  const sendReactionTimeToServer = async (time) => {
-    await fetch("http://localhost:5000/record", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reactionTime: time }),
-    });
-  };
-
-  return (
-    <div className="flex flex-col items-center mt-20">
-      <button
-        onClick={handleClick}
-        className={`w-40 h-40 text-white font-bold text-lg transition-colors duration-500 ${
-          status === "waiting" ? "bg-red-500" : status === "ready" ? "bg-green-500" : "bg-gray-500"
-        }`}
-      >
-        {status === "waiting" ? "Wait for Green" : status === "ready" ? "Click!" : "Too Soon!"}
-      </button>
-      <button onClick={startTest} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
-        Start Test
-      </button>
-      {reactionTime && <p className="mt-4 text-lg">Your Reaction Time: {reactionTime} ms</p>}
-    </div>
-  );
-}
-
+        function sendReactionTime(time) {
+            fetch("http://localhost:5000/record", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ reactionTime: time })
+            });
+        }
+    </script>
+</body>
+</html>
