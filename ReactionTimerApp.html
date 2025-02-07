@@ -1,1 +1,60 @@
+import { useState, useEffect } from "react";
+
+export default function ReactionTimer() {
+  const [status, setStatus] = useState("waiting");
+  const [startTime, setStartTime] = useState(null);
+  const [reactionTime, setReactionTime] = useState(null);
+  const [timeoutId, setTimeoutId] = useState(null);
+
+  const startTest = () => {
+    setStatus("waiting");
+    setReactionTime(null);
+
+    const delay = Math.floor(Math.random() * 19000) + 1000; // 1-20s delay
+    const id = setTimeout(() => {
+      setStatus("ready");
+      setStartTime(Date.now());
+    }, delay);
+
+    setTimeoutId(id);
+  };
+
+  const handleClick = () => {
+    if (status === "waiting") {
+      clearTimeout(timeoutId);
+      setStatus("too soon");
+    } else if (status === "ready") {
+      const endTime = Date.now();
+      const timeTaken = endTime - startTime;
+      setReactionTime(timeTaken);
+      sendReactionTimeToServer(timeTaken);
+      setStatus("waiting");
+    }
+  };
+
+  const sendReactionTimeToServer = async (time) => {
+    await fetch("http://localhost:5000/record", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reactionTime: time }),
+    });
+  };
+
+  return (
+    <div className="flex flex-col items-center mt-20">
+      <button
+        onClick={handleClick}
+        className={`w-40 h-40 text-white font-bold text-lg transition-colors duration-500 ${
+          status === "waiting" ? "bg-red-500" : status === "ready" ? "bg-green-500" : "bg-gray-500"
+        }`}
+      >
+        {status === "waiting" ? "Wait for Green" : status === "ready" ? "Click!" : "Too Soon!"}
+      </button>
+      <button onClick={startTest} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
+        Start Test
+      </button>
+      {reactionTime && <p className="mt-4 text-lg">Your Reaction Time: {reactionTime} ms</p>}
+    </div>
+  );
+}
 
