@@ -10,8 +10,8 @@
             font-family: Arial, sans-serif;
         }
         #reaction-button {
-            width: 200px;
-            height: 200px;
+            width: 300px;
+            height: 100px;
             font-size: 20px;
             color: white;
             background-color: red;
@@ -33,39 +33,45 @@
     <br>
     <button id="start-button">Start Test</button>
     <p id="reaction-time"></p>
+    <p id="all-reaction-times"></p>
     
     <script>
         let startTime, timeoutId;
-        
-        document.getElementById("start-button").addEventListener("click", () => {
-            const button = document.getElementById("reaction-button");
-            button.disabled = true;
-            button.style.backgroundColor = "red";
-            button.textContent = "Wait for Green";
-            document.getElementById("reaction-time").textContent = "";
-            
-            const delay = Math.floor(Math.random() * 19000) + 1000; // Random delay between 1-20s
-            
-            timeoutId = setTimeout(() => {
-                startTime = Date.now();
-                button.style.backgroundColor = "green";
-                button.textContent = "CLICK!";
-                button.disabled = false;
-            }, delay);
-        });
+    let reactionTimes = []; // Array to store all reaction times
 
-        document.getElementById("reaction-button").addEventListener("click", () => {
-            const button = document.getElementById("reaction-button");
-            if (button.style.backgroundColor === "red") {
-                clearTimeout(timeoutId);
-                button.textContent = "Too Soon!";
-            } else {
-                const reactionTime = Date.now() - startTime;
-                document.getElementById("reaction-time").textContent = `Your Reaction Time: ${reactionTime} ms`;
-                sendReactionTime(reactionTime);
-            }
-            button.disabled = true;
-        });
+    document.getElementById("start-button").addEventListener("click", () => {
+        const button = document.getElementById("reaction-button");
+        button.disabled = true;
+        button.style.backgroundColor = "red";
+        button.textContent = "Wait for Green";
+        document.getElementById("reaction-time").textContent = "";
+
+        // Change the delay to 1 to 10 seconds
+        const delay = Math.floor(Math.random() * 9000) + 1000; // Random delay between 1-10s
+
+        timeoutId = setTimeout(() => {
+            startTime = Date.now();
+            button.style.backgroundColor = "green";
+            button.textContent = "CLICK!";
+            button.disabled = false;
+        }, delay);
+    });
+
+    document.getElementById("reaction-button").addEventListener("click", () => {
+        const button = document.getElementById("reaction-button");
+        if (button.style.backgroundColor === "red") {
+            clearTimeout(timeoutId);
+            button.textContent = "Too Soon!";
+        } else {
+            const reactionTime = Date.now() - startTime;
+            document.getElementById("reaction-time").textContent = `Your Reaction Time: ${reactionTime} ms`;
+            reactionTimes.push(reactionTime); // Store the reaction time
+            reactionTimes.sort((a, b) => a - b); // Sort reaction times from lowest to highest
+            document.getElementById("all-reaction-times").innerHTML = `All Reaction Times:<br>${reactionTimes.join("<br>")} ms`;
+            sendReactionTime(reactionTime);
+        }
+        button.disabled = true;
+    });
 
         function sendReactionTime(time) {
             fetch("http://localhost:5000/record", {
