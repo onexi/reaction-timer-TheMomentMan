@@ -91,6 +91,7 @@
     <div id="app">
       <!-- <ul id="reaction-times"></ul> -->
       <!-- Input fields (without using a <form> element) -->
+      <img src="clickgameimage.webp" alt="Game Image" style="width: 75%; height: auto;">
       <div class="input-container">
         <input id="username" type="text" placeholder="Your name" required />
       </div>
@@ -107,7 +108,7 @@
         </p>
       </div>
       <div class="input-container">
-        <label id="all-reaction-times">Historical times recorded</label>
+        <label id="all-reaction-times"><b>Historical times recorded</b></label>
       </div>
       
     </div>
@@ -218,7 +219,7 @@
           }
           const data = await response.json();
           reactionTimes = data.reactionTimes;
-          document.getElementById("all-reaction-times").innerHTML = `All Reaction Times:<br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
+          document.getElementById("all-reaction-times").innerHTML = `<b>All Reaction Times:</b><br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
 
           if (reactionTimes.length > 0) {
             fastestTime = Math.min(...reactionTimes.map(rt => rt.reactionTime));
