@@ -89,7 +89,7 @@
   </head>
   <body>
     <div id="app">
-      <!-- <ul id="reaction-times"></ul> -->
+      <ul id="reaction-times"></ul>
       <!-- Input fields (without using a <form> element) -->
       <div class="input-container">
         <input id="username" type="text" placeholder="Your name" required />
@@ -115,11 +115,11 @@
     <script>
       // DOM element references
       const usernameInput = document.getElementById("username");
-      //const messageInput = document.getElementById("message");
-      const startBtn = document.getElementById("startBtn");
+      const messageInput = document.getElementById("message");
+      const sendBtn = document.getElementById("startBtn");
       const stopBtn = document.getElementById("stopBtn");
       //const messagesList = document.getElementById("messages");
-      const reactionTimesList = document.getElementById("all-reaction-times");
+      const reactionTimesList = document.getElementById("reaction-times");
 
       //variables to be used for the timer
       let startTime, timeoutId;
@@ -167,7 +167,7 @@
               
               //button.textContent=username;
               //document.getElementById("all-reaction-times").innerHTML = `All Reaction Times:<br>${reactionTimes.map(time => `${time} ms`).join("<br>")}`;
-              document.getElementById("all-reaction-times").innerHTML = `Historical Times recorded:<br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
+              document.getElementById("all-reaction-times").innerHTML = `All Reaction Times:<br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
               //document.getElementById("all-reaction-times").innerHTML = `All Reaction Times:<br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
               //document.getElementById("all-reaction-times").innerHTML = reactionTimes.sort((a, b) => a.reactionTime - b.reactionTime).map(entry => `${entry.username} ${entry.reactionTime}ms`).join("<br>");
               
@@ -177,7 +177,7 @@
                   document.getElementById("fastest-time-value").value = fastestTime;
               }
               
-              sendReactionTime(username, reactionTime);
+              sendReactionTime(reactionTime);
               button.style.backgroundColor = "green";
           }
           clearTimeout(timeoutId);
@@ -188,7 +188,7 @@
       /* *
        * Asynchronously fetches all messages from the server and updates the messages list.
        */
-      /* async function fetchAllReactionTimes() {
+      async function fetchAllReactionTimes() {
         try {
           const response = await fetch("/all-reaction-times");
           if (!response.ok) {
@@ -206,26 +206,6 @@
           reactionTimes.scrollTop = reactionTimes.scrollHeight;
         } catch (error) {
           console.error("Error fetching messages:", error);
-        }
-      } */
-
-      // Function to fetch all reaction times from the server
-      async function fetchAllReactionTimes() {
-        try {
-          const response = await fetch("/all-reaction-times");
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          const data = await response.json();
-          reactionTimes = data.reactionTimes;
-          document.getElementById("all-reaction-times").innerHTML = `All Reaction Times:<br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
-
-          if (reactionTimes.length > 0) {
-            fastestTime = Math.min(...reactionTimes.map(rt => rt.reactionTime));
-            document.getElementById("fastest-time-value").value = fastestTime;
-          }
-        } catch (error) {
-          console.error("Error fetching reaction times:", error);
         }
       }
 
@@ -280,18 +260,15 @@
       */
       //button.textContent=reactionTime;//for testing purposes
 
-      function sendReactionTime(username,time) {
-            fetch("/record", {
+      function sendReactionTime(time) {
+            fetch("http://localhost:5000/record", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, reactionTime: time })
+                body: JSON.stringify({ reactionTime: time })
             });
       }
       //initial fetch on page load
-      fetchAllReactionTimes();
-
-      //Pull new information every 2 seconds
-      setInterval(fetchAllReactionTimes,2000)
+      fetchAllReactionTimes()
     </script>
   </body>
 </html>
