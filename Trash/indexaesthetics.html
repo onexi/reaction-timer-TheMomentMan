@@ -1,11 +1,10 @@
-<!-- public/index.html -->
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Messenger App (async/await)</title>
+    <title>Reaction Timer App</title>
     <style>
-      /* Basic styling for the messenger app */
+      /* Basic styling for the reaction timer app */
       body {
         font-family: Arial, sans-serif;
         background-color: #f2f2f2;
@@ -13,13 +12,12 @@
         padding: 0;
       }
       #app {
-        width: 500px;
+        width: 600px;
         margin: 50px auto;
         background-color: #fff;
         border: 1px solid #ccc;
         padding: 20px;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        /*background-color: green;*/ /* Uncomment to see the container -to change background*/
       }
       #reaction-times {
         list-style-type: none;
@@ -36,40 +34,23 @@
         display: flex;
         gap: 10px;
         margin-bottom: 10px;
-        /* max-width: 100% */;
-        /* background-color: aqua; */
       }
       .input-container input[type="text"] {
         flex: 1;
         padding: 10px;
         border: 1px solid #ccc;
         border-radius: 3px;
-        /* max-width: 300px */;
-        /*background-color: aquamarine; */
       }
-      #startBtn {
+      #startBtn, #stopBtn {
         padding: 10px 20px;
-        width: 40%;
         border: none;
         background-color: green;
         color: #fff;
         border-radius: 3px;
         cursor: pointer;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-        font-size: 12px;
       }
-      #stopBtn {
-        padding: 10px 20px;
-        width: 80%;
-        border: none;
-        background-color: green;
-        color: #fff;
-        border-radius: 3px;
-        cursor: pointer;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-        font-size: 12px;
-      }
-      #startBtn:hover {
+      #startBtn:hover, #stopBtn:hover {
         background-color: greenyellow;
         color: black;
       }
@@ -94,27 +75,21 @@
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
-        font-size: 10px;
+        font-size: 12px; /* Set the font size of the table to 12px */
       }
       table, th, td {
         border: 1px solid #ccc;
       }
       th, td {
-        padding: 5px;
+        padding: 10px;
         text-align: left;
-      }
-      tr {
-        height: 12px
       }
     </style>
   </head>
   <body>
     <div id="app">
-      <img src="clickgameimage.webp" alt="Game Image" style="width: 30%; height: auto;">
-      <!-- <p id="instruction">CLICK TO START, WHEN THE STOP BUTTON TURNS RED, CLICK IT AS FAST" </p> -->
-      <div class="input-container">
-        <p id="instruction"><b>CLICK TO START, WHEN THE STOP BUTTON TURNS RED, CLICK IT AS FAST</b></p>
-      </div>
+      <img src="clickgameimage.webp" alt="Game Image" style="width: 50%; height: auto;">
+      <p id="instruction"><b>CLICK TO START, WHEN THE STOP BUTTON TURNS RED, CLICK IT AS FAST AS YOU CAN</b></p>
       <div class="input-container">
         <input id="username" type="text" placeholder="Your name" required />
       </div>
@@ -144,7 +119,7 @@
         <tbody>
           <!-- Rows will be added here dynamically -->
         </tbody>
-      </table>      
+      </table>
     </div>
 
     <script>
@@ -152,83 +127,57 @@
       const usernameInput = document.getElementById("username");
       const startBtn = document.getElementById("startBtn");
       const stopBtn = document.getElementById("stopBtn");
-      const reactionTimesList = document.getElementById("all-reaction-times");
       const reactionTimesTableBody = document.getElementById("reaction-times-table").getElementsByTagName("tbody")[0];
 
-      //variables to be used for the timer
+      // Variables to be used for the timer
       let startTime, timeoutId;
-      let reactionTimes=[];
-      let reactionTime=0;
+      let reactionTimes = [];
+      let reactionTime = 0;
       let fastestTime = Infinity;
-      let username="";
-      let clickCounter=0;
-      const maxClicksAllowed=1;
 
       // Event listener for the start button
-      document.getElementById("startBtn").addEventListener("click", () => {
-        const button = document.getElementById("stopBtn");
-        button.disabled = true;
-        button.textContent = "Stop";
-        button.style.backgroundColor = "green";
-        stopBtn.textContent="WAITING"
+      startBtn.addEventListener("click", () => {
+        stopBtn.disabled = true;
+        stopBtn.textContent = "Stop";
+        stopBtn.style.backgroundColor = "green";
+        stopBtn.textContent = "WAITING"
         stopBtn.style.backgroundColor = "orange";
-        clickCounter=0;
-        
-        //Delay between 1-10 seconds
+
+        // Delay between 1-10 seconds
         const delay = Math.floor(Math.random() * 9000) + 1000; // Random delay between 1-10s
 
         // Set a timeout to change the button color to red after the delay
-
         timeoutId = setTimeout(() => {
           startTime = Date.now();
-          button.disabled = false;
-          button.style.backgroundColor = "red";
-          button.textContent = "Click!";
+          stopBtn.disabled = false;
+          stopBtn.style.backgroundColor = "red";
         }, delay);
       });
 
-      document.getElementById("stopBtn").addEventListener("click", () => {
-          const button = document.getElementById("stopBtn");
-          clickCounter++;
-          //stopBtn.textContent=clickCounter
+      stopBtn.addEventListener("click", () => {
+        if (stopBtn.style.backgroundColor === "red") {
+          const reactionTime = Date.now() - startTime;
+          document.getElementById("current-reaction-time-value").value = reactionTime;
+          const username = usernameInput.value;
 
-        /* if (button.style.backgroundColor === "orange" && clickCounter > maxClicksAllowed) {
-          stopbtn.textContent=clickCounter
-          alert("You have clicked too many times, please wait for the next round");
-          
-          button.style.backgroundColor = "green";
-          button.textContent = "Stop";
-          button.disabled = true;
-          return; // Exit the function to impose the penalty
-        } */
+          reactionTimes.push({ username, reactionTime });
+          reactionTimes.sort((a, b) => a.reactionTime - b.reactionTime);
 
-          if (button.style.backgroundColor === "red") {
-              const reactionTime = Date.now() - startTime;
-              
-              document.getElementById("current-reaction-time-value").value = reactionTime;
-              const username = usernameInput.value;
-              
-              reactionTimes.push({ username, reactionTime }); // Store the username and reaction time
-              reactionTimes.sort((a, b) => a.reactionTime - b.reactionTime); // Sort reaction times from lowest to highest
-              
-              //document.getElementById("all-reaction-times").innerHTML = `Historical Times recorded:<br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
-            
-              updateReactionTimesTable(); //duplicating efforts - but this is to ensure the table is updated
-              
-              if (reactionTime < fastestTime) {
-                  fastestTime = reactionTime;
-                  document.getElementById("fastest-time-value").value = fastestTime;
-              }
-              
-              sendReactionTime(username, reactionTime);
-              button.style.backgroundColor = "green";
+          updateReactionTimesTable();
+
+          if (reactionTime < fastestTime) {
+            fastestTime = reactionTime;
+            document.getElementById("fastest-time-value").value = fastestTime;
           }
-          clearTimeout(timeoutId);
-          button.disabled = true;
-          button.textContent = "Stop";
+
+          sendReactionTime(username, reactionTime);
+          stopBtn.style.backgroundColor = "green";
+        }
+        clearTimeout(timeoutId);
+        stopBtn.disabled = true;
+        stopBtn.textContent = "Stop";
       });
-      
-      // function to update the table of results
+
       function updateReactionTimesTable() {
         reactionTimesTableBody.innerHTML = "";
         reactionTimes.forEach(entry => {
@@ -249,8 +198,7 @@
           const data = await response.json();
           reactionTimes = data.reactionTimes;
           reactionTimes.sort((a, b) => a.reactionTime - b.reactionTime); // Sort reaction times from lowest to highest
-          //document.getElementById("all-reaction-times").innerHTML = `<b>All Reaction Times:</b><br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
-          updateReactionTimesTable(); //to update the table
+          updateReactionTimesTable();
 
           if (reactionTimes.length > 0) {
             fastestTime = Math.min(...reactionTimes.map(rt => rt.reactionTime));
@@ -261,18 +209,19 @@
         }
       }
 
-      function sendReactionTime(username,time) {
-            fetch("/record", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, reactionTime: time })
-            });
+      function sendReactionTime(username, time) {
+        fetch("/record", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, reactionTime: time })
+        });
       }
-      //initial fetch on page load
+
+      // Initial fetch on page load
       fetchAllReactionTimes();
 
-      //Pull new information every 2 seconds
-      setInterval(fetchAllReactionTimes,2000)
+      // Poll for new reaction times every 2 seconds
+      setInterval(fetchAllReactionTimes, 2000);
     </script>
   </body>
 </html>
