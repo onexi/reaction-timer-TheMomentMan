@@ -36,6 +36,7 @@
         display: flex;
         gap: 10px;
         margin-bottom: 10px;
+        /* max-width: 100% */;
         /* background-color: aqua; */
       }
       .input-container input[type="text"] {
@@ -43,10 +44,12 @@
         padding: 10px;
         border: 1px solid #ccc;
         border-radius: 3px;
+        /* max-width: 300px */;
         /*background-color: aquamarine; */
       }
       #startBtn {
         padding: 10px 20px;
+        width: 40%;
         border: none;
         background-color: green;
         color: #fff;
@@ -56,7 +59,7 @@
       }
       #stopBtn {
         padding: 10px 20px;
-        width: 150px;
+        width: 80%;
         border: none;
         background-color: green;
         color: #fff;
@@ -85,22 +88,38 @@
         text-align: center;
         font-size: 12px;
       }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-size: 10px;
+      }
+      table, th, td {
+        border: 1px solid #ccc;
+      }
+      th, td {
+        padding: 10px;
+        text-align: left;
+      }
     </style>
   </head>
   <body>
     <div id="app">
-      <!-- <ul id="reaction-times"></ul> -->
-      <!-- Input fields (without using a <form> element) -->
-      <img src="clickgameimage.webp" alt="Game Image" style="width: 75%; height: auto;">
+      <img src="clickgameimage.webp" alt="Game Image" style="width: 50%; height: auto;">
+      <!-- <p id="instruction">CLICK TO START, WHEN THE STOP BUTTON TURNS RED, CLICK IT AS FAST" </p> -->
+      <div class="input-container">
+        <p id="instruction"><b>CLICK TO START, WHEN THE STOP BUTTON TURNS RED, CLICK IT AS FAST</b></p>
+      </div>
       <div class="input-container">
         <input id="username" type="text" placeholder="Your name" required />
       </div>
       <div class="input-container">
         <button id="startBtn" type="button">Start</button>
+      </div>
+      <div class="input-container">
         <button id="stopBtn" type="button">Stop</button>
       </div>
       <div class="input-container">
-        <!-- <p id="fastest-time">Fastest Reaction Recorded: <input type="text" id="fastest-time-value" readonly> ms</p> -->
         <p id="fastest-time">
           Fastest Reaction Recorded: <input type="text" id="fastest-time-value" readonly> ms
           &nbsp;&nbsp; <!-- Add some space between the two labels -->
@@ -110,17 +129,26 @@
       <div class="input-container">
         <label id="all-reaction-times"><b>Historical times recorded</b></label>
       </div>
-      
+      <table id="reaction-times-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Reaction Time (ms)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be added here dynamically -->
+        </tbody>
+      </table>      
     </div>
 
     <script>
       // DOM element references
       const usernameInput = document.getElementById("username");
-      //const messageInput = document.getElementById("message");
       const startBtn = document.getElementById("startBtn");
       const stopBtn = document.getElementById("stopBtn");
-      //const messagesList = document.getElementById("messages");
       const reactionTimesList = document.getElementById("all-reaction-times");
+      const reactionTimesTableBody = document.getElementById("reaction-times-table").getElementsByTagName("tbody")[0];
 
       //variables to be used for the timer
       let startTime, timeoutId;
@@ -129,21 +157,18 @@
       let fastestTime = Infinity;
       let username="";
 
-      
       // Event listener for the start button
       document.getElementById("startBtn").addEventListener("click", () => {
         const button = document.getElementById("stopBtn");
         button.disabled = true;
         button.textContent = "Stop";
         button.style.backgroundColor = "green";
-        //document.getElementById("reaction-time").textContent = "Your Reaction Time: ";
-
-        //const username = usernameInput.value;
-
+        stopBtn.textContent="WAITING"
+        stopBtn.style.backgroundColor = "orange";
         //Delay between 1-10 seconds
         const delay = Math.floor(Math.random() * 9000) + 1000; // Random delay between 1-10s
 
-        //button.textContent="Stopped"
+        // Set a timeout to change the button color to red after the delay
 
         timeoutId = setTimeout(() => {
           startTime = Date.now();
@@ -156,23 +181,17 @@
           const button = document.getElementById("stopBtn");
           if (button.style.backgroundColor === "red") {
               const reactionTime = Date.now() - startTime;
-              //document.getElementById("reaction-time").textContent = `Your Reaction Time: ${reactionTime} ms`;
               
               document.getElementById("current-reaction-time-value").value = reactionTime;
               const username = usernameInput.value;
-              //reactionTimes.push(reactionTime); // Store the reaction time
               
               reactionTimes.push({ username, reactionTime }); // Store the username and reaction time
-              //reactionTimes.sort((a, b) => a - b); // Sort reaction times from lowest to highest
               reactionTimes.sort((a, b) => a.reactionTime - b.reactionTime); // Sort reaction times from lowest to highest
               
-              //button.textContent=username;
-              //document.getElementById("all-reaction-times").innerHTML = `All Reaction Times:<br>${reactionTimes.map(time => `${time} ms`).join("<br>")}`;
               document.getElementById("all-reaction-times").innerHTML = `Historical Times recorded:<br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
-              //document.getElementById("all-reaction-times").innerHTML = `All Reaction Times:<br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
-              //document.getElementById("all-reaction-times").innerHTML = reactionTimes.sort((a, b) => a.reactionTime - b.reactionTime).map(entry => `${entry.username} ${entry.reactionTime}ms`).join("<br>");
+            
+              updateReactionTimesTable(); //duplicating efforts - but this is to ensure the table is updated
               
-
               if (reactionTime < fastestTime) {
                   fastestTime = reactionTime;
                   document.getElementById("fastest-time-value").value = fastestTime;
@@ -183,34 +202,21 @@
           }
           clearTimeout(timeoutId);
           button.disabled = true;
+          button.textContent = "Stop";
       });
+      
+      // function to update the table of results
+      function updateReactionTimesTable() {
+        reactionTimesTableBody.innerHTML = "";
+        reactionTimes.forEach(entry => {
+          const row = reactionTimesTableBody.insertRow();
+          const usernameCell = row.insertCell(0);
+          const reactionTimeCell = row.insertCell(1);
+          usernameCell.textContent = entry.username;
+          reactionTimeCell.textContent = entry.reactionTime;
+        });
+      }
 
-      /*
-      /* *
-       * Asynchronously fetches all messages from the server and updates the messages list.
-       */
-      /* async function fetchAllReactionTimes() {
-        try {
-          const response = await fetch("/all-reaction-times");
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          const data = await response.json();
-          // Clear and update the messages list
-          reactionTimes.innerHTML = "";
-          data.reactionTimes.forEach((react) => {
-            const li = document.createElement("li");
-            li.textContent = `${react.username}: ${react.reactionTime}`;
-            reactionTimes.appendChild(li);
-          });
-          // Scroll to the bottom of the list
-          reactionTimes.scrollTop = reactionTimes.scrollHeight;
-        } catch (error) {
-          console.error("Error fetching messages:", error);
-        }
-      } */
-
-      // Function to fetch all reaction times from the server
       async function fetchAllReactionTimes() {
         try {
           const response = await fetch("/all-reaction-times");
@@ -219,7 +225,9 @@
           }
           const data = await response.json();
           reactionTimes = data.reactionTimes;
+          reactionTimes.sort((a, b) => a.reactionTime - b.reactionTime); // Sort reaction times from lowest to highest
           document.getElementById("all-reaction-times").innerHTML = `<b>All Reaction Times:</b><br>${reactionTimes.map(entry => `${entry.username}: ${entry.reactionTime} ms`).join("<br>")}`;
+          updateReactionTimesTable(); //to update the table
 
           if (reactionTimes.length > 0) {
             fastestTime = Math.min(...reactionTimes.map(rt => rt.reactionTime));
@@ -229,57 +237,6 @@
           console.error("Error fetching reaction times:", error);
         }
       }
-
-      /*
-       //Asynchronously sends a new message to the server.
-       
-      async function sendMessage() {
-        const username = usernameInput.value.trim();
-        const message = messageInput.value.trim();
-
-        // Do not send if username or message is empty.
-        if (!username || !message) {
-          return;
-        }
-
-        try {
-          const response = await fetch("/messages", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username, message }),
-          });
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          // Clear the message input after a successful send
-          messageInput.value = "";
-        } catch (error) {
-          console.error("Error sending message:", error);
-        }
-      }
-      */
-
-      /*
-      // Listen for a click event on the Send button.
-      sendBtn.addEventListener("click", sendMessage);
-
-      // Also allow sending a message by pressing the Enter key in the message input.
-      messageInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-          sendMessage();
-        }
-      });
-      */
-
-      /*
-      // Poll for new messages every 2 seconds
-      setInterval(fetchMessages, 2000);
-      // Initial fetch on page load
-      fetchMessages();
-      */
-      //button.textContent=reactionTime;//for testing purposes
 
       function sendReactionTime(username,time) {
             fetch("/record", {
