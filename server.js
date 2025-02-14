@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const app = express();
 
@@ -8,35 +7,46 @@ app.use(express.json());
 // Serve static files (HTML, CSS, client-side JavaScript) from the "public" directory.
 app.use(express.static('public'));
 
-// In-memory storage for messages
-let messages = [];
+// In-memory storage for reaction times
+let reactionTimes = [];
 
 /**
- * GET /messages
- * Returns a JSON object containing all messages.
+ * POST /record
+ * Expects a JSON payload with "username" and "reactionTime".
+ * Adds the new reaction time to the reactionTimes array.
  */
-app.get('/messages', (req, res) => {
-  res.json({ messages });
+app.post('/record', (req, res) => {
+  const { username, reactionTime } = req.body;
+  if (!reactionTime || reactionTime <= 0 || !username) {
+    return res.status(400).json({ error: 'Invalid reaction time or username.' });
+  }
+  const newReactionTime = {
+    username,
+    reactionTime,
+    timestamp: Date.now()
+  };
+  reactionTimes.push(newReactionTime);
+  res.status(201).json({ success: true });
 });
 
 /**
- * POST /messages
- * Expects a JSON payload with "username" and "message".
- * Adds the new message to the messages array.
+ * GET /all-reaction-times
+ * Returns a JSON object containing all reaction times.
  */
-app.post('/messages', (req, res) => {
-  const { username, message } = req.body;
-  if (!username || !message) {
-    return res.status(400).json({ error: 'Both username and message are required.' });
+app.get('/all-reaction-times', (req, res) => {
+  res.json({ reactionTimes });
+});
+
+/**
+ * GET /fastest
+ * Returns the fastest reaction time.
+ */
+app.get('/fastest', (req, res) => {
+  if (reactionTimes.length === 0) {
+    return res.json({ fastestTime: 'No data yet' });
   }
-  // Optionally, include a timestamp for each message.
-  const newMessage = {
-    username,
-    message,
-    timestamp: Date.now()
-  };
-  messages.push(newMessage);
-  res.status(201).json({ success: true });
+  const fastestTime = Math.min(...reactionTimes.map(rt => rt.reactionTime));
+  res.json({ fastestTime });
 });
 
 // Define the port (default to 3000 if not specified).
